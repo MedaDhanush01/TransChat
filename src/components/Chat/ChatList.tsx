@@ -2,9 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { LogOut, Moon, Sun, Plus } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
-import { getUserChats, getUser } from '../../services/chatService';
+import { getUserChats, getUser, getAllUsers, createOrGetChat } from '../../services/chatService';
 import { signOut } from '../../services/authService';
-import { Chat, ChatWithUser } from '../../types';
+import { Chat, ChatWithUser, User } from '../../types';
 
 interface ChatListProps {
   onSelectChat: (chat: ChatWithUser) => void;
@@ -20,10 +20,24 @@ export const ChatList: React.FC<ChatListProps> = ({
   const { currentUser } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const [chats, setChats] = useState<ChatWithUser[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const [creatingChat, setCreatingChat] = useState(false);
 
   useEffect(() => {
     if (!currentUser) return;
+
+    const fetchUsers = async () => {
+      try {
+        const allUsers = await getAllUsers();
+        const filteredUsers = allUsers.filter((user) => user.uid !== currentUser.uid);
+        setUsers(filteredUsers);
+      } catch (error) {
+        console.error('Error fetching users:', error);
+      }
+    };
+
+    fetchUsers();
 
     const unsubscribe = getUserChats(currentUser.uid, async (fetchedChats: Chat[]) => {
       const chatsWithUsers = await Promise.all(
@@ -53,6 +67,28 @@ export const ChatList: React.FC<ChatListProps> = ({
       await signOut();
     } catch (error) {
       console.error('Sign out error:', error);
+    }
+  };
+
+  const handleStartChat = async (user: User) => {
+    if (!currentUser || creatingChat) return;
+
+    setCreatingChat(true);
+    try {
+      const chatId = await createOrGetChat(currentUser.uid, user.uid);
+      const chatWithUser: ChatWithUser = {
+        id: chatId,
+        participants: [currentUser.uid, user.uid],
+        lastMessage: '',
+        lastMessageTime: new Date(),
+        translationSettings: {},
+        otherUser: user,
+      };
+      onSelectChat(chatWithUser);
+    } catch (error) {
+      console.error('Error creating chat:', error);
+    } finally {
+      setCreatingChat(false);
     }
   };
 
@@ -113,14 +149,38 @@ export const ChatList: React.FC<ChatListProps> = ({
             <p className="text-gray-500 dark:text-gray-400">Loading chats...</p>
           </div>
         ) : chats.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-32 px-4 text-center">
-            <p className="text-gray-500 dark:text-gray-400">No chats yet</p>
-            <button
-              onClick={onNewChat}
-              className="mt-2 text-teal-600 dark:text-teal-400 font-semibold hover:underline"
-            >
-              Start a new chat
-            </button>
+          <div className="p-4">
+            <div className="mb-4">
+              <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">No chats yet. Start a conversation with someone:</p>
+            </div>
+            {users.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-gray-500 dark:text-gray-400">No other users found. Create more accounts to start chatting!</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {users.map((user) => (
+                  <button
+                    key={user.uid}
+                    onClick={() => handleStartChat(user)}
+                    disabled={creatingChat}
+                    className="w-full flex items-center p-3 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    <div className="w-12 h-12 rounded-full bg-teal-500 flex items-center justify-center text-white font-semibold flex-shrink-0">
+                      {user.displayName.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="ml-3 flex-1 text-left overflow-hidden">
+                      <h4 className="font-semibold text-gray-900 dark:text-white">
+                        {user.displayName}
+                      </h4>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                        {user.email}
+                      </p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         ) : (
           chats.map((chat) => (
