@@ -10,6 +10,7 @@ import {
   sendMessage,
   updateTranslationSettings,
   deleteMessageForEveryone,
+  markMessagesAsRead,
 } from '../../services/chatService';
 import { translateText } from '../../services/translationService';
 import { uploadMedia, validateMediaFile, getMediaType } from '../../services/storageService';
@@ -74,6 +75,12 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  useEffect(() => {
+    if (chatId && currentUser) {
+      markMessagesAsRead(chatId, currentUser.uid);
+    }
+  }, [chatId, currentUser]);
 
   const handleSendMessage = async (text: string) => {
     if (!currentUser || !text.trim()) return;
@@ -150,6 +157,13 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     setShowSettings(false);
   };
 
+  const handleLanguageChange = async (language: string) => {
+    if (!currentUser) return;
+
+    setTargetLanguage(language);
+    await updateTranslationSettings(chatId, currentUser.uid, translationEnabled, language);
+  };
+
   const handleDeleteLocalMessage = (messageId: string) => {
     addLocalDeletedMessage(chatId, messageId);
     setMessages(messages.filter((msg) => msg.id !== messageId));
@@ -180,6 +194,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
         onBack={onBack}
         onToggleTranslation={handleToggleTranslation}
         translationEnabled={translationEnabled}
+        targetLanguage={targetLanguage}
+        onLanguageChange={handleLanguageChange}
       />
 
       <div className="flex-1 overflow-y-auto py-4">

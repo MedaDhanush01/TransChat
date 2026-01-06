@@ -1,12 +1,37 @@
-import React from 'react';
-import { ArrowLeft, Languages } from 'lucide-react';
+import React, { useState } from 'react';
+import { ArrowLeft, Languages, ChevronDown } from 'lucide-react';
 import { User } from '../../types';
+
+const LANGUAGES = [
+  { code: 'en', name: 'English' },
+  { code: 'es', name: 'Spanish' },
+  { code: 'fr', name: 'French' },
+  { code: 'de', name: 'German' },
+  { code: 'it', name: 'Italian' },
+  { code: 'pt', name: 'Portuguese' },
+  { code: 'ru', name: 'Russian' },
+  { code: 'ja', name: 'Japanese' },
+  { code: 'ko', name: 'Korean' },
+  { code: 'zh-CN', name: 'Chinese (Simplified)' },
+  { code: 'zh-TW', name: 'Chinese (Traditional)' },
+  { code: 'ar', name: 'Arabic' },
+  { code: 'hi', name: 'Hindi' },
+  { code: 'bn', name: 'Bengali' },
+  { code: 'tr', name: 'Turkish' },
+  { code: 'vi', name: 'Vietnamese' },
+  { code: 'th', name: 'Thai' },
+  { code: 'nl', name: 'Dutch' },
+  { code: 'pl', name: 'Polish' },
+  { code: 'sv', name: 'Swedish' },
+];
 
 interface ChatHeaderProps {
   user: User;
   onBack: () => void;
   onToggleTranslation: () => void;
   translationEnabled: boolean;
+  targetLanguage?: string;
+  onLanguageChange?: (language: string) => void;
 }
 
 export const ChatHeader: React.FC<ChatHeaderProps> = ({
@@ -14,7 +39,12 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
   onBack,
   onToggleTranslation,
   translationEnabled,
+  targetLanguage = 'en',
+  onLanguageChange,
 }) => {
+  const [showLanguageMenu, setShowLanguageMenu] = useState(false);
+  const currentLanguage = LANGUAGES.find((lang) => lang.code === targetLanguage) || LANGUAGES[0];
+
   return (
     <div className="bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3 flex items-center justify-between">
       <div className="flex items-center">
@@ -33,17 +63,53 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
         </div>
       </div>
 
-      <button
-        onClick={onToggleTranslation}
-        className={`p-2 rounded-full transition-colors ${
-          translationEnabled
-            ? 'bg-teal-500 text-white'
-            : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
-        }`}
-        title="Toggle Translation"
-      >
-        <Languages size={20} />
-      </button>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={onToggleTranslation}
+          className={`p-2 rounded-full transition-colors ${
+            translationEnabled
+              ? 'bg-teal-500 text-white'
+              : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
+          }`}
+          title="Toggle Translation"
+        >
+          <Languages size={20} />
+        </button>
+
+        {translationEnabled && (
+          <div className="relative">
+            <button
+              onClick={() => setShowLanguageMenu(!showLanguageMenu)}
+              className="px-3 py-2 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center gap-1 text-sm font-medium"
+              title="Change target language"
+            >
+              {currentLanguage.name}
+              <ChevronDown size={16} />
+            </button>
+
+            {showLanguageMenu && (
+              <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-700 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600 z-20 max-h-64 overflow-y-auto">
+                {LANGUAGES.map((lang) => (
+                  <button
+                    key={lang.code}
+                    onClick={() => {
+                      onLanguageChange?.(lang.code);
+                      setShowLanguageMenu(false);
+                    }}
+                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors ${
+                      lang.code === targetLanguage
+                        ? 'bg-teal-50 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400 font-semibold'
+                        : 'text-gray-700 dark:text-gray-300'
+                    }`}
+                  >
+                    {lang.name}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

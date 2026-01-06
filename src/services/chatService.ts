@@ -229,3 +229,55 @@ export const deleteMessageForEveryone = async (messageId: string): Promise<void>
     { merge: true }
   );
 };
+
+export const markMessagesAsRead = async (chatId: string, userId: string): Promise<void> => {
+  const messagesRef = collection(db, 'messages');
+  const q = query(
+    messagesRef,
+    where('chatId', '==', chatId),
+    where('receiverId', '==', userId)
+  );
+
+  const querySnapshot = await getDocs(q);
+  const promises: Promise<void>[] = [];
+
+  querySnapshot.forEach((doc) => {
+    const data = doc.data();
+    const readBy = data.readBy || [];
+
+    if (!readBy.includes(userId)) {
+      promises.push(
+        setDoc(
+          doc.ref,
+          { readBy: [...readBy, userId] },
+          { merge: true }
+        )
+      );
+    }
+  });
+
+  await Promise.all(promises);
+};
+
+export const getUnreadCount = async (chatId: string, userId: string): Promise<number> => {
+  const messagesRef = collection(db, 'messages');
+  const q = query(
+    messagesRef,
+    where('chatId', '==', chatId),
+    where('receiverId', '==', userId)
+  );
+
+  const querySnapshot = await getDocs(q);
+  let unreadCount = 0;
+
+  querySnapshot.forEach((doc) => {
+    const data = doc.data();
+    const readBy = data.readBy || [];
+
+    if (!readBy.includes(userId)) {
+      unreadCount++;
+    }
+  });
+
+  return unreadCount;
+};

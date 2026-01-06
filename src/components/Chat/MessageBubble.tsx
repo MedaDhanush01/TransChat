@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Message, User } from '../../types';
 import { useAuth } from '../../contexts/AuthContext';
 import { FileMessage } from './FileMessage';
+import { MediaModal } from './MediaModal';
 import { MoreVertical, Trash2 } from 'lucide-react';
 import { canDeleteForEveryone, getTimeUntilExpiry } from '../../services/deletionService';
 import { MessageActionMenu } from './MessageActionMenu';
@@ -27,6 +28,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   const [showMenu, setShowMenu] = useState(false);
   const [showActionMenu, setShowActionMenu] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
+  const [showMediaModal, setShowMediaModal] = useState(false);
   const [actionMenuPos, setActionMenuPos] = useState({ x: 0, y: 0 });
   const canDeleteEverywhere = canDeleteForEveryone(message.timestamp);
   const timeRemaining = canDeleteEverywhere ? getTimeUntilExpiry(message.timestamp) : '';
@@ -106,17 +108,28 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
           {message.mediaUrl && (
             <div className="mb-2">
               {message.mediaType === 'image' ? (
-                <img
-                  src={message.mediaUrl}
-                  alt="Shared media"
-                  className="rounded-lg max-w-full h-auto"
-                />
+                <button
+                  onClick={() => setShowMediaModal(true)}
+                  className="block rounded-lg overflow-hidden hover:opacity-80 transition-opacity cursor-pointer"
+                  title="Click to view full size"
+                >
+                  <img
+                    src={message.mediaUrl}
+                    alt="Shared media"
+                    className="w-64 h-48 object-cover rounded-lg"
+                  />
+                </button>
               ) : message.mediaType === 'video' ? (
-                <video
-                  src={message.mediaUrl}
-                  controls
-                  className="rounded-lg max-w-full h-auto"
-                />
+                <button
+                  onClick={() => setShowMediaModal(true)}
+                  className="block rounded-lg overflow-hidden hover:opacity-80 transition-opacity cursor-pointer"
+                  title="Click to view full size"
+                >
+                  <video
+                    src={message.mediaUrl}
+                    className="w-64 h-48 object-cover rounded-lg bg-black"
+                  />
+                </button>
               ) : (
                 <FileMessage
                   fileName={message.fileName || 'Download'}
@@ -212,6 +225,15 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
           message={message}
           sender={sender}
           onClose={() => setShowInfoModal(false)}
+        />
+      )}
+
+      {showMediaModal && message.mediaUrl && (message.mediaType === 'image' || message.mediaType === 'video') && (
+        <MediaModal
+          mediaUrl={message.mediaUrl}
+          mediaType={message.mediaType}
+          fileName={message.fileName}
+          onClose={() => setShowMediaModal(false)}
         />
       )}
     </>

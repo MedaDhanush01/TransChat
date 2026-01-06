@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { LogOut, Moon, Sun, Plus } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
-import { getUserChats, getUser, getAllUsers, createOrGetChat } from '../../services/chatService';
+import { getUserChats, getUser, getAllUsers, createOrGetChat, getUnreadCount } from '../../services/chatService';
 import { signOut } from '../../services/authService';
 import { Chat, ChatWithUser, User } from '../../types';
 
@@ -48,9 +48,12 @@ export const ChatList: React.FC<ChatListProps> = ({
           const otherUser = await getUser(otherUserId);
           if (!otherUser) return null;
 
+          const unreadCount = await getUnreadCount(chat.id, currentUser.uid);
+
           return {
             ...chat,
             otherUser,
+            unreadCount,
           } as ChatWithUser;
         })
       );
@@ -201,9 +204,16 @@ export const ChatList: React.FC<ChatListProps> = ({
                   <h3 className="font-semibold text-gray-900 dark:text-white truncate">
                     {chat.otherUser.displayName}
                   </h3>
-                  <span className="text-xs text-gray-500 dark:text-gray-400 ml-2 flex-shrink-0">
-                    {formatTime(chat.lastMessageTime)}
-                  </span>
+                  <div className="flex items-center gap-2 ml-2 flex-shrink-0">
+                    {chat.unreadCount && chat.unreadCount > 0 && (
+                      <span className="inline-flex items-center justify-center w-6 h-6 text-xs font-bold text-white bg-teal-500 rounded-full">
+                        {chat.unreadCount > 99 ? '99+' : chat.unreadCount}
+                      </span>
+                    )}
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      {formatTime(chat.lastMessageTime)}
+                    </span>
+                  </div>
                 </div>
                 <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
                   {chat.lastMessage || 'No messages yet'}

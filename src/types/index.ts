@@ -24,6 +24,7 @@ export interface Message {
     senderName: string;
     text: string;
   };
+  readBy?: string[];
 }
 
 export interface Chat {
