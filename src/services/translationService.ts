@@ -86,4 +86,12 @@ export const SUPPORTED_LANGUAGES = [
   { code: 'nl', name: 'Dutch' },
   { code: 'pl', name: 'Polish' },
   { code: 'sv', name: 'Swedish' },
+  { code: 'te', name: 'Telugu' },
+  { code: 'ta', name: 'Tamil' },
+  { code: 'kn', name: 'Kannada' },
+  { code: 'ml', name: 'Malayalam' },
+  { code: 'gu', name: 'Gujarati' },
+  { code: 'mr', name: 'Marathi' },
+  { code: 'pa', name: 'Punjabi' },
+  { code: 'ur', name: 'Urdu' },
 ];

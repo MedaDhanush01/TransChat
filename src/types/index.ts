@@ -3,6 +3,11 @@ export interface User {
   email: string;
   displayName: string;
   createdAt: Date;
+  status?: 'active' | 'deleted' | 'suspended';
+  deletedAt?: Date;
+  blockList?: string[];
+  lastLoginAt?: Date;
+  profileUpdatedAt?: Date;
 }
 
 export interface Message {

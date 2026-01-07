@@ -1,29 +1,7 @@
 import React, { useState } from 'react';
 import { ArrowLeft, Languages, ChevronDown } from 'lucide-react';
 import { User } from '../../types';
-
-const LANGUAGES = [
-  { code: 'en', name: 'English' },
-  { code: 'es', name: 'Spanish' },
-  { code: 'fr', name: 'French' },
-  { code: 'de', name: 'German' },
-  { code: 'it', name: 'Italian' },
-  { code: 'pt', name: 'Portuguese' },
-  { code: 'ru', name: 'Russian' },
-  { code: 'ja', name: 'Japanese' },
-  { code: 'ko', name: 'Korean' },
-  { code: 'zh-CN', name: 'Chinese (Simplified)' },
-  { code: 'zh-TW', name: 'Chinese (Traditional)' },
-  { code: 'ar', name: 'Arabic' },
-  { code: 'hi', name: 'Hindi' },
-  { code: 'bn', name: 'Bengali' },
-  { code: 'tr', name: 'Turkish' },
-  { code: 'vi', name: 'Vietnamese' },
-  { code: 'th', name: 'Thai' },
-  { code: 'nl', name: 'Dutch' },
-  { code: 'pl', name: 'Polish' },
-  { code: 'sv', name: 'Swedish' },
-];
+import { SUPPORTED_LANGUAGES } from '../../services/translationService';
 
 interface ChatHeaderProps {
   user: User;
@@ -43,7 +21,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
   onLanguageChange,
 }) => {
   const [showLanguageMenu, setShowLanguageMenu] = useState(false);
-  const currentLanguage = LANGUAGES.find((lang) => lang.code === targetLanguage) || LANGUAGES[0];
+  const currentLanguage = SUPPORTED_LANGUAGES.find((lang) => lang.code === targetLanguage) || SUPPORTED_LANGUAGES[0];
 
   return (
     <div className="bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3 flex items-center justify-between">
@@ -89,7 +67,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
 
             {showLanguageMenu && (
               <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-700 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600 z-20 max-h-64 overflow-y-auto">
-                {LANGUAGES.map((lang) => (
+                {SUPPORTED_LANGUAGES.map((lang) => (
                   <button
                     key={lang.code}
                     onClick={() => {

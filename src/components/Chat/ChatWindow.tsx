@@ -11,6 +11,7 @@ import {
   updateTranslationSettings,
   deleteMessageForEveryone,
   markMessagesAsRead,
+  canSendMessage,
 } from '../../services/chatService';
 import { translateText } from '../../services/translationService';
 import { uploadMedia, validateMediaFile, getMediaType } from '../../services/storageService';
@@ -85,6 +86,12 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   const handleSendMessage = async (text: string) => {
     if (!currentUser || !text.trim()) return;
 
+    const validation = await canSendMessage(currentUser.uid, otherUser.uid);
+    if (!validation.allowed) {
+      alert(validation.reason || 'Cannot send message');
+      return;
+    }
+
     await sendMessage(
       chatId,
       currentUser.uid,
@@ -108,6 +115,12 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     const validation = validateMediaFile(file);
     if (!validation.valid) {
       alert(validation.error);
+      return;
+    }
+
+    const messageValidation = await canSendMessage(currentUser.uid, otherUser.uid);
+    if (!messageValidation.allowed) {
+      alert(messageValidation.reason || 'Cannot send message');
       return;
     }
 

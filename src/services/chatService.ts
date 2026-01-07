@@ -281,3 +281,100 @@ export const getUnreadCount = async (chatId: string, userId: string): Promise<nu
 
   return unreadCount;
 };
+
+export const updateUserProfile = async (
+  userId: string,
+  displayName: string
+): Promise<void> => {
+  const userRef = doc(db, 'users', userId);
+  await setDoc(
+    userRef,
+    {
+      displayName,
+      profileUpdatedAt: Timestamp.now(),
+    },
+    { merge: true }
+  );
+};
+
+export const deleteUserAccount = async (userId: string): Promise<void> => {
+  const userRef = doc(db, 'users', userId);
+  await setDoc(
+    userRef,
+    {
+      status: 'deleted',
+      deletedAt: Timestamp.now(),
+    },
+    { merge: true }
+  );
+};
+
+export const blockUser = async (userId: string, blockedUserId: string): Promise<void> => {
+  const userRef = doc(db, 'users', userId);
+  const userData = await getDoc(userRef);
+  const blockList = userData.data()?.blockList || [];
+
+  if (!blockList.includes(blockedUserId)) {
+    await setDoc(
+      userRef,
+      {
+        blockList: [...blockList, blockedUserId],
+      },
+      { merge: true }
+    );
+  }
+};
+
+export const unblockUser = async (userId: string, blockedUserId: string): Promise<void> => {
+  const userRef = doc(db, 'users', userId);
+  const userData = await getDoc(userRef);
+  const blockList = userData.data()?.blockList || [];
+
+  await setDoc(
+    userRef,
+    {
+      blockList: blockList.filter((id: string) => id !== blockedUserId),
+    },
+    { merge: true }
+  );
+};
+
+export const isUserBlocked = async (userId: string, otherUserId: string): Promise<boolean> => {
+  const user = await getUser(userId);
+  const otherUser = await getUser(otherUserId);
+
+  const isBothBlocked = (user?.blockList?.includes(otherUserId) || false) ||
+    (otherUser?.blockList?.includes(userId) || false);
+
+  return isBothBlocked;
+};
+
+export const canSendMessage = async (
+  senderId: string,
+  recipientId: string
+): Promise<{ allowed: boolean; reason?: string }> => {
+  const sender = await getUser(senderId);
+  const recipient = await getUser(recipientId);
+
+  if (!recipient) {
+    return { allowed: false, reason: 'User not found' };
+  }
+
+  if (recipient.status === 'deleted') {
+    return { allowed: false, reason: 'This user account has been deleted' };
+  }
+
+  if (recipient.status === 'suspended') {
+    return { allowed: false, reason: 'This account is temporarily unavailable' };
+  }
+
+  if (recipient.blockList?.includes(senderId)) {
+    return { allowed: false, reason: 'This user has blocked you' };
+  }
+
+  if (sender?.blockList?.includes(recipientId)) {
+    return { allowed: false, reason: 'You have blocked this user' };
+  }
+
+  return { allowed: true };
+};
